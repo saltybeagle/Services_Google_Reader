@@ -28,7 +28,7 @@ class Services_Google_Reader
      *
      * @var Services_Google_Reader_HTTPClient
      */
-    private $_http_client;
+    private $_http_client = null;
     
     const CLIENT  = 'UNL_Services_Google_Reader';
     const VERSION = '0.1.0';
@@ -39,22 +39,24 @@ class Services_Google_Reader
      * @param string $username Username eg: brett.bieber@gmail.com
      * @param string $password Password eg: flibbertygibberty
      */
-    function __construct($username, $password)
+    function __construct($username, $password, $http_client_implementation = 'sockets')
     {
         $this->_username = $username;
         $this->_password = $password;
+        $this->setHttpClientImplementation($http_client_implementation);
     }
     
     private function _connect()
     {
-        $req =& new HTTP_Request('https://www.google.com/accounts/ClientLogin');
-        $req->setMethod(HTTP_REQUEST_METHOD_POST);
         $req->addHeader('Content-type', 'application/x-www-form-urlencoded');
-        $req->addPostData('accountType', 'GOOGLE');
-        $req->addPostData('Email',       $this->_username);
-        $req->addPostData('Passwd',      $this->_password);
-        $req->addPostData('source',      self::CLIENT.self::VERSION);
-        $req->addPostData('service',     'xapi');
+        
+        $data = array('accountType' => 'GOOGLE',
+                      'Email'       => $this->_username,
+                      'Passwd'      => $this->_password,
+                      'source'      => self::CLIENT.self::VERSION,
+                      'service'     => 'xapi');
+        $this->_http_client->post('https://www.google.com/accounts/ClientLogin',http_build_query($data));
+        
     }
     
     public function getToken()
@@ -69,9 +71,13 @@ class Services_Google_Reader
      *
      * @param string $url URL to the feed xml file
      */
-    public function addFeed($url)
+    public function subscribe($url)
     {
-        
+        $path = 'http://www.google.com/reader/api/0/subscription/edit?client=unlfeeds';
+        $data = array('s'  => 'feed/'.$url,
+                      'ac' => 'subscribe',
+                      'T'  => $key);
+        $response = $this->_http_client->post($path, $content);
     }
     
     /**

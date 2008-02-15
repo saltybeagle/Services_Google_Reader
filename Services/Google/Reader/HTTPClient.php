@@ -164,7 +164,7 @@ abstract class Services_Google_Reader_HttpClient
      * @throws Services_Google_Reader_CommunicationException if there is an error
      *         communicating with the Akismet API server.
      */
-    abstract public function post($path, $content, $api_key = '');
+    abstract public function post($path, $content, $headers);
 
     // }}}
     // {{{ __construct()
